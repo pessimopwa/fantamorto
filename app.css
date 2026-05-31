@@ -399,8 +399,73 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
     width: auto; padding: 0; margin-top: -4px;
 }
 
+/* ── CLASSIFICA ───────────────────────────────────────────── */
+.classifica-riga {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 10px; overflow: hidden;
+}
+.classifica-riga--me { border-color: var(--accent); }
+.classifica-riga__header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; cursor: pointer; user-select: none;
+}
+.classifica-pos { font-size: 20px; min-width: 32px; text-align: center; }
+.classifica-info { flex: 1; min-width: 0; }
+.classifica-squadra { display: block; font-weight: 700; font-size: 14px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.classifica-squadra em { font-style: normal; color: var(--accent); font-size: 12px; }
+.classifica-username { font-size: 12px; color: var(--muted); }
+.classifica-punteggio { font-weight: 700; color: #34d399; white-space: nowrap; font-size: 15px; }
+.classifica-toggle { font-size: 14px; color: var(--muted); padding-left: 4px; }
+.classifica-vip-lista { padding: 0 16px 12px; border-top: 1px solid var(--border); }
+.classifica-vip-vuoto { font-size: 13px; color: var(--muted); padding-top: 10px; }
+.classifica-vip-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px;
+}
+.classifica-vip-item:last-child { border-bottom: none; }
+.classifica-vip-item--morto .classifica-vip-nome { text-decoration: line-through; color: var(--muted); }
+.classifica-vip-nome { flex: 1; }
+.classifica-vip-meta { color: var(--muted); font-size: 12px; white-space: nowrap; }
+
 /* ── UTILITY ──────────────────────────────────────────────── */
 .empty   { color: var(--muted); font-size: 13px; text-align: center; padding: 20px 0; font-style: italic; }
 .section-title { font-size: 18px; font-weight: 700; margin-bottom: 14px; }
 .section-sub   { font-size: 12px; color: var(--muted); margin-bottom: 16px; margin-top: -10px; }
 .loading { color: var(--muted); font-size: 13px; padding: 16px 0; text-align: center; }
+
+
+/* ── CLASSIFICA ───────────────────────────────────────────── */
+.classifica-riga {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 10px; overflow: hidden;
+}
+.classifica-riga--me { border-color: var(--accent); }
+
+.classifica-riga__header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; cursor: pointer; user-select: none;
+}
+.classifica-riga__header:hover { background: rgba(255,255,255,0.02); }
+
+.classifica-pos { font-size: 20px; min-width: 32px; text-align: center; }
+.classifica-info { flex: 1; min-width: 0; }
+.classifica-squadra { display: block; font-weight: 700; font-size: 14px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.classifica-squadra em { font-style: normal; color: var(--accent); font-size: 12px; }
+.classifica-username { font-size: 12px; color: var(--muted); }
+.classifica-punteggio { font-weight: 700; color: #34d399; white-space: nowrap; font-size: 15px; }
+.classifica-toggle { font-size: 11px; color: var(--muted); }
+
+.classifica-vip-lista { padding: 0 16px 12px; border-top: 1px solid var(--border); }
+.classifica-vip-vuoto { font-size: 13px; color: var(--muted); padding-top: 10px; }
+
+.classifica-vip-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 13px;
+}
+.classifica-vip-item:last-child { border-bottom: none; }
+.classifica-vip-item--morto .classifica-vip-nome { text-decoration: line-through; color: var(--muted); }
+.classifica-vip-nome { flex: 1; }
+.classifica-vip-meta { color: var(--muted); font-size: 12px; white-space: nowrap; }

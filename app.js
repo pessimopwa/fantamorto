@@ -39,7 +39,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         navigator.serviceWorker.register('./sw.js').then(reg => {
 
             // Forza il controllo di una nuova versione sul server ad ogni avvio
-            reg.update();
+            reg.update().catch(() => {});
 
             reg.addEventListener('updatefound', () => {
                 const nuovoSW = reg.installing;
@@ -210,25 +210,46 @@ async function gestisciAuth() {
     const password = document.getElementById('auth-password').value;
     if (!email || !password) return toast('⚠️ Inserisci email e password.');
 
+    // Disabilita il pulsante e mostra stato di caricamento
+    const btn = document.getElementById('btn-auth-submit');
+    const testoOriginale = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Caricamento...';
+
     if (isLoginMode) {
         const { data, error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) return toast('❌ ' + error.message);
+        if (error) {
+            btn.disabled = false;
+            btn.textContent = testoOriginale;
+            // Messaggio più chiaro per email non confermata
+            if (error.message.toLowerCase().includes('email not confirmed') ||
+                error.message.toLowerCase().includes('not confirmed')) {
+                return toast('📧 Conferma la tua email prima di accedere. Controlla la casella di posta.');
+            }
+            return toast('❌ ' + error.message);
+        }
         utenteLoggato = data.user;
         await caricaProfilo();
+        btn.disabled = false;
+        btn.textContent = testoOriginale;
         mostraHomeLeghes();
         applicaDeepLinkSePresente();
     } else {
         const username = document.getElementById('auth-username').value.trim();
-        if (!username) return toast('⚠️ Scegli un username.');
-        if (!document.getElementById('check-consenso').checked)
+        if (!username) { btn.disabled = false; btn.textContent = testoOriginale; return toast('⚠️ Scegli un username.'); }
+        if (!document.getElementById('check-consenso').checked) {
+            btn.disabled = false; btn.textContent = testoOriginale;
             return toast('⚠️ Devi accettare la Privacy Policy per registrarti.');
+        }
         const { data: existing } = await sb.from('profili').select('id').eq('username', username).maybeSingle();
-        if (existing) return toast('❌ Username già in uso, scegline un altro.');
+        if (existing) { btn.disabled = false; btn.textContent = testoOriginale; return toast('❌ Username già in uso, scegline un altro.'); }
 
         const { data, error } = await sb.auth.signUp({
             email, password,
             options: { data: { username } }
         });
+        btn.disabled = false;
+        btn.textContent = testoOriginale;
         if (error) return toast('❌ ' + error.message);
         toast('✅ Registrazione completata! Controlla la mail per confermare, poi accedi.');
         isLoginMode = true;
@@ -245,7 +266,7 @@ async function accediConGoogle() {
     const { error } = await sb.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: window.location.origin + window.location.pathname,
+            redirectTo: 'https://fantamorto.pages.dev/',
             queryParams: {
                 access_type: 'online',
                 prompt: 'select_account'   // mostra sempre la selezione account Google
@@ -297,8 +318,24 @@ async function gestisciProfiloOAuth() {
 }
 
 async function caricaProfilo() {
-    const { data } = await sb.from('profili').select('*').eq('id', utenteLoggato.id).single();
+    // Usa maybeSingle per non generare errore se il profilo non esiste ancora
+    const { data, error } = await sb.from('profili').select('*').eq('id', utenteLoggato.id).maybeSingle();
+    if (error) console.error('Errore caricamento profilo:', error.message);
     profiloCorrente = data;
+
+    // Se il profilo non esiste (utente senza riga in tabella), lo crea con un username di default
+    if (!profiloCorrente) {
+        const meta = utenteLoggato.user_metadata || {};
+        const usernameDefault = (meta.username || meta.name || utenteLoggato.email?.split('@')[0] || 'Giocatore')
+            .replace(/\s+/g, '').substring(0, 20);
+        const { data: nuovo } = await sb.from('profili').insert([{
+            id: utenteLoggato.id,
+            username: usernameDefault + '_' + Math.floor(Math.random() * 9000 + 1000)
+        }]).select().single();
+        profiloCorrente = nuovo;
+        // Invita a personalizzare il nickname
+        setTimeout(() => apriModalNickname(), 800);
+    }
 }
 
 /** Apre il modal per cambiare il nickname, precompilato con quello attuale */
@@ -761,6 +798,103 @@ async function rimuoviVip(squadraId, nomeVip) {
 
     toast('✅ ' + nomeVip + ' rimosso! Cambi rimasti: ' + (maxCambi - cambiUsati - 1));
     caricaSquadra();
+}
+
+// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// CLASSIFICA
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Carica la classifica della lega corrente.
+ * Per ogni membro mostra nome squadra, punteggio e — espandendo la riga —
+ * la lista dei VIP scelti con nome, età e stato (vivo/deceduto).
+ */
+async function caricaClassifica() {
+    const container = document.getElementById('leaderboard');
+    if (!container) return;
+    if (!membroCorrente || !legaCorrente) {
+        container.innerHTML = '<div class="loading">Entra in una lega per vedere la classifica.</div>';
+        return;
+    }
+    container.innerHTML = '<div class="loading">⏳ Caricamento classifica...</div>';
+
+    // Recupera tutti i membri della stessa lega/stagione ordinati per punteggio
+    // Nota: non usiamo il join profili() per evitare errori se la FK non è configurata
+    const { data: membri, error } = await sb
+        .from('membri_lega')
+        .select('id, nome_squadra, punteggio, profilo_id, stagione_id')
+        .eq('lega_id', legaCorrente.id)
+        .eq('stagione_id', membroCorrente.stagione_id)
+        .order('punteggio', { ascending: false });
+
+    if (error) {
+        container.innerHTML = '<div class="loading">Errore: ' + error.message + '</div>';
+        return;
+    }
+    if (!membri || membri.length === 0) {
+        container.innerHTML = '<div class="empty">Nessun membro trovato in questa lega.</div>';
+        return;
+    }
+
+    // Recupera i VIP di tutti i membri in una sola query
+    const membroIds = membri.map(m => m.id);
+    const { data: tutteSquadre } = await sb
+        .from('squadre')
+        .select('membro_id, candidati(id, nome, eta, deceduto)')
+        .in('membro_id', membroIds);
+
+    // Raggruppa i VIP per membro_id
+    const vipPerMembro = {};
+    (tutteSquadre || []).forEach(s => {
+        if (!vipPerMembro[s.membro_id]) vipPerMembro[s.membro_id] = [];
+        if (s.candidati) vipPerMembro[s.membro_id].push(s.candidati);
+    });
+
+    container.innerHTML = '';
+
+    membri.forEach((m, idx) => {
+        const isMe = m.id === membroCorrente.id;
+        const vips = vipPerMembro[m.id] || [];
+
+        // Medaglie per i primi 3
+        const medaglie = ['🥇', '🥈', '🥉'];
+        const pos = idx < 3 ? medaglie[idx] : `${idx + 1}°`;
+
+        // Riga principale
+        const riga = document.createElement('div');
+        riga.className = 'classifica-riga' + (isMe ? ' classifica-riga--me' : '');
+        riga.innerHTML = `
+            <div class="classifica-riga__header" onclick="toggleVipLega(this)">
+                <span class="classifica-pos">${pos}</span>
+                <div class="classifica-info">
+                    <span class="classifica-squadra">${m.nome_squadra}${isMe ? ' <em>(tu)</em>' : ''}</span>
+                    <span class="classifica-username">${vips.length} VIP scelti</span>
+                </div>
+                <span class="classifica-punteggio">${m.punteggio || 0} pt</span>
+                <span class="classifica-toggle">▼</span>
+            </div>
+            <div class="classifica-vip-lista" style="display:none;">
+                ${vips.length === 0
+                    ? '<div class="classifica-vip-vuoto">Nessun VIP scelto</div>'
+                    : vips.map(v => `
+                        <div class="classifica-vip-item ${v.deceduto ? 'classifica-vip-item--morto' : ''}">
+                            <span class="classifica-vip-nome">${v.nome}</span>
+                            <span class="classifica-vip-meta">${v.eta} anni ${v.deceduto ? '💀' : '❤️'}</span>
+                        </div>`).join('')
+                }
+            </div>`;
+        container.appendChild(riga);
+    });
+}
+
+/** Espande/comprime la lista VIP di un membro nella classifica */
+function toggleVipLega(header) {
+    const lista = header.nextElementSibling;
+    const toggle = header.querySelector('.classifica-toggle');
+    const aperta = lista.style.display !== 'none';
+    lista.style.display = aperta ? 'none' : 'block';
+    toggle.textContent = aperta ? '▼' : '▲';
 }
 
 // ══════════════════════════════════════════════════════════════
