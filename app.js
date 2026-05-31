@@ -839,10 +839,12 @@ async function caricaClassifica() {
 
     // Recupera i VIP di tutti i membri in una sola query
     const membroIds = membri.map(m => m.id);
-    const { data: tutteSquadre } = await sb
+    console.log('[Classifica] membri trovati:', membri.length, membroIds);
+    const { data: tutteSquadre, error: errSquadre } = await sb
         .from('squadre')
         .select('membro_id, candidati(id, nome, eta, deceduto)')
         .in('membro_id', membroIds);
+    console.log('[Classifica] squadre:', tutteSquadre, 'errore:', errSquadre);
 
     // Raggruppa i VIP per membro_id
     const vipPerMembro = {};
@@ -861,20 +863,19 @@ async function caricaClassifica() {
         const medaglie = ['🥇', '🥈', '🥉'];
         const pos = idx < 3 ? medaglie[idx] : `${idx + 1}°`;
 
-        // Riga principale
-        const riga = document.createElement('div');
+        // Riga principale — usa <details>/<summary> nativo, niente JS
+        const riga = document.createElement('details');
         riga.className = 'classifica-riga' + (isMe ? ' classifica-riga--me' : '');
         riga.innerHTML = `
-            <div class="classifica-riga__header" onclick="toggleVipLega(this)">
+            <summary class="classifica-riga__header">
                 <span class="classifica-pos">${pos}</span>
                 <div class="classifica-info">
                     <span class="classifica-squadra">${m.nome_squadra}${isMe ? ' <em>(tu)</em>' : ''}</span>
                     <span class="classifica-username">${vips.length} VIP scelti</span>
                 </div>
                 <span class="classifica-punteggio">${m.punteggio || 0} pt</span>
-                <span class="classifica-toggle">▼</span>
-            </div>
-            <div class="classifica-vip-lista" style="display:none;">
+            </summary>
+            <div class="classifica-vip-lista">
                 ${vips.length === 0
                     ? '<div class="classifica-vip-vuoto">Nessun VIP scelto</div>'
                     : vips.map(v => `
