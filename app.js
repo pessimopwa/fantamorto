@@ -419,6 +419,8 @@ function mostraHomeLeghes() {
     const btnCondividi = document.getElementById('btn-condividi-app');
     if (btnCondividi) btnCondividi.style.display = 'inline-block';
     legaCorrente = membroCorrente = stagioneCorrente = null;
+    // Resetta il flag dello storico così la select utenti si ricarica per la nuova lega
+    _storicoUtentiCaricati = false;
     caricaListaLeghes();
 }
 
@@ -891,14 +893,6 @@ async function caricaClassifica() {
     });
 }
 
-/** Espande/comprime la lista VIP di un membro nella classifica */
-function toggleVipLega(header) {
-    const lista = header.nextElementSibling;
-    const toggle = header.querySelector('.classifica-toggle');
-    const aperta = lista.style.display !== 'none';
-    lista.style.display = aperta ? 'none' : 'block';
-    toggle.textContent = aperta ? '▼' : '▲';
-}
 
 // ══════════════════════════════════════════════════════════════
 // VIP JOLLY
@@ -1488,6 +1482,12 @@ async function caricaStorico() {
 
     const filtroMese   = document.getElementById('storico-filtro-mese').value;
     const filtroUtente = document.getElementById('storico-filtro-utente').value;
+
+    // Guard: se non siamo dentro una lega non caricare
+    if (!legaCorrente) {
+        container.innerHTML = '<div class="empty">Entra in una lega per vedere lo storico.</div>';
+        return;
+    }
 
     try {
         let query = sb.from('v_storico_morti').select('*')
