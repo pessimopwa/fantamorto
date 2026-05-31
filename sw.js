@@ -7,7 +7,7 @@
 //     su tutti i dispositivi, incrementa questo numero (v1 → v2 → v3 …).
 //     Il browser rileva la modifica, scarica i nuovi file e app.js
 //     gestisce il reload automatico (silenzioso in background, banner in foreground).
-const CACHE_NAME = 'fantamorto-v1';
+const CACHE_NAME = 'fantamorto-v2';
 const STATIC_ASSETS = [
     './',
     './index.html',
