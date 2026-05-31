@@ -859,38 +859,61 @@ async function caricaClassifica() {
 
     container.innerHTML = '';
 
+    // Salva i dati VIP in una mappa globale accessibile dal modal
+    window._vipPerMembro = vipPerMembro;
+
+    const medaglie = ['🥇', '🥈', '🥉'];
+
     membri.forEach((m, idx) => {
         const isMe = m.id === membroCorrente.id;
         const vips = vipPerMembro[m.id] || [];
+        const pos  = idx < 3 ? medaglie[idx] : (idx + 1) + '°';
 
-        // Medaglie per i primi 3
-        const medaglie = ['🥇', '🥈', '🥉'];
-        const pos = idx < 3 ? medaglie[idx] : `${idx + 1}°`;
-
-        // Riga principale — usa <details>/<summary> nativo, niente JS
-        const riga = document.createElement('details');
+        const riga = document.createElement('div');
         riga.className = 'classifica-riga' + (isMe ? ' classifica-riga--me' : '');
-        riga.innerHTML = `
-            <summary class="classifica-riga__header">
-                <span class="classifica-pos">${pos}</span>
-                <div class="classifica-info">
-                    <span class="classifica-squadra">${m.nome_squadra}${isMe ? ' <em>(tu)</em>' : ''}</span>
-                    <span class="classifica-username">${vips.length} VIP scelti</span>
-                </div>
-                <span class="classifica-punteggio">${m.punteggio || 0} pt</span>
-            </summary>
-            <div class="classifica-vip-lista">
-                ${vips.length === 0
-                    ? '<div class="classifica-vip-vuoto">Nessun VIP scelto</div>'
-                    : vips.map(v => `
-                        <div class="classifica-vip-item ${v.deceduto ? 'classifica-vip-item--morto' : ''}">
-                            <span class="classifica-vip-nome">${v.nome}</span>
-                            <span class="classifica-vip-meta">${v.eta} anni ${v.deceduto ? '💀' : '❤️'}</span>
-                        </div>`).join('')
-                }
-            </div>`;
+        riga.innerHTML =
+            '<span class="classifica-pos">' + pos + '</span>' +
+            '<div class="classifica-info">' +
+            '<span class="classifica-squadra">' + m.nome_squadra + (isMe ? ' <em>(tu)</em>' : '') + '</span>' +
+            '<span class="classifica-username">' + vips.length + ' VIP scelti</span>' +
+            '</div>' +
+            '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<span class="classifica-punteggio">' + (m.punteggio || 0) + ' pt</span>' +
+            '<button class="btn-sm btn-ghost" onclick="apriRosa(\'' + m.id + '\', \'' + m.nome_squadra.replace(/'/g,"\\'") + '\')">👁 Rosa</button>' +
+            '</div>';
         container.appendChild(riga);
     });
+}
+
+/**
+ * Apre il modal con la rosa (lista VIP) di un membro della lega.
+ * Usa i dati già caricati in memoria da caricaClassifica().
+ * @param {string} membroId  - ID del membro
+ * @param {string} nomeSquadra - nome della squadra (per il titolo)
+ */
+function apriRosa(membroId, nomeSquadra) {
+    const vips = (window._vipPerMembro || {})[membroId] || [];
+
+    document.getElementById('modal-rosa-titolo').textContent = '🪦 Rosa: ' + nomeSquadra;
+
+    const lista = document.getElementById('modal-rosa-lista');
+    if (vips.length === 0) {
+        lista.innerHTML = '<div class="empty">Nessun VIP scelto.</div>';
+    } else {
+        lista.innerHTML = vips.map(v =>
+            '<div class="list-item" style="margin-bottom:8px;">' +
+            '<div>' +
+            '<div class="vip-nome">' + v.nome + '</div>' +
+            '<div class="vip-meta">' + (v.eta ? v.eta + ' anni' : '') + '</div>' +
+            '</div>' +
+            (v.deceduto
+                ? '<span class="badge badge-dead">☠️ Deceduto</span>'
+                : '<span class="badge badge-alive">✅ Vivo</span>') +
+            '</div>'
+        ).join('');
+    }
+
+    apriModal('modal-rosa');
 }
 
 
