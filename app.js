@@ -1220,46 +1220,7 @@ function _resetRicerca() {
     document.getElementById('btn-group-vip').style.display = 'none';
 }
 
-// ══════════════════════════════════════════════════════════════
-// CLASSIFICA
-// ══════════════════════════════════════════════════════════════
-
-async function caricaClassifica() {
-    const container = document.getElementById('leaderboard');
-    container.innerHTML = '<div class="loading">Calcolo in corso...</div>';
-    if (!legaCorrente || !stagioneCorrente) {
-        container.innerHTML = '<div class="empty">Nessuna stagione attiva.</div>';
-        return;
-    }
-
-    const { data, error } = await sb
-        .from('v_classifica').select('*')
-        .eq('lega_id', legaCorrente.id)
-        .eq('stagione_id', stagioneCorrente.id)
-        .order('posizione', { ascending: true });
-
-    if (error || !data || data.length === 0) {
-        container.innerHTML = '<div class="empty">Ancora nessun punto. Il cimitero è vuoto... ⏳</div>';
-        return;
-    }
-
-    container.innerHTML = '';
-    data.forEach(row => {
-        const posClass = row.posizione === 1 ? 'gold' : row.posizione === 2 ? 'silver' : row.posizione === 3 ? 'bronze' : '';
-        const isTu     = row.profilo_id === utenteLoggato.id;
-        const div = document.createElement('div');
-        div.className   = 'rank-item';
-        div.style.border = isTu ? '1px solid rgba(147,51,234,0.35)' : '1px solid transparent';
-        div.innerHTML =
-            '<div class="rank-pos ' + posClass + '">#' + row.posizione + '</div>' +
-            '<div class="rank-details">' +
-            '<div class="rank-team">' + row.nome_squadra + (isTu ? ' <span style="font-size:10px;color:var(--primary);">(tu)</span>' : '') + '</div>' +
-            '<div class="rank-user">@' + row.username + '</div>' +
-            '</div>' +
-            '<div class="rank-score">' + row.punteggio + ' pt</div>';
-        container.appendChild(div);
-    });
-}
+// (seconda caricaClassifica rimossa — usa quella sopra con i VIP)
 
 // ══════════════════════════════════════════════════════════════
 // NECROLOGI
