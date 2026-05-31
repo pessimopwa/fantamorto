@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ===== SEO META TAG ===== -->
+  <title>Giovanni Dev — Le mie App</title>
+  <meta name="description" content="Portale delle app e PWA sviluppate da Giovanni: giochi, utility e strumenti per la community." />
+  <meta name="theme-color" content="#0d0d0d" />
+
+  <!-- Open Graph (condivisione social) -->
+  <meta property="og:title" content="Giovanni Dev — Le mie App" />
+  <meta property="og:description" content="Scopri le PWA sviluppate da Giovanni: FantaMorto, Asta FantaCalcio e molto altro." />
+  <meta property="og:type" content="website" />
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <style>
+    /* ===== RESET & VARIABILI ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary:    #0d0d0d;
+      --bg-card:       #1a1a1a;
+      --bg-card-hover: #222222;
+      --accent-1:      #8b5cf6; /* viola – FantaMorto */
+      --accent-2:      #10b981; /* verde – FantaCalcio */
+      --accent-wip:    #f59e0b; /* ambra – "in sviluppo" */
+      --text-primary:  #f1f1f1;
+      --text-muted:    #888888;
+      --border:        #2a2a2a;
+      --radius:        14px;
+    }
+
+    /* ===== BODY ===== */
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      text-align: center;
+      padding: 3rem 1.5rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header .avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 1rem;
+    }
+
+    header h1 {
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      max-width: 480px;
+      margin-inline: auto;
+    }
+
+    /* ===== FILTRI CATEGORIA ===== */
+    .filtri {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 1.5rem 1rem 0.5rem;
+    }
+
+    .filtro-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 999px;
+      padding: 0.4rem 1rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filtro-btn:hover,
+    .filtro-btn.attivo {
+      background: var(--accent-1);
+      border-color: var(--accent-1);
+      color: #fff;
+    }
+
+    /* ===== GRIGLIA APP ===== */
+    main {
+      flex: 1;
+      padding: 1.5rem 1rem 3rem;
+      max-width: 900px;
+      margin-inline: auto;
+      width: 100%;
+    }
+
+    .griglia {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* ===== CARD ===== */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      transition: transform 0.2s, border-color 0.2s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      /* Linea colorata in cima alla card */
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--card-accent, var(--accent-1));
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--card-accent, var(--accent-1));
+      background: var(--bg-card-hover);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .card-icona {
+      font-size: 2rem;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+
+    .card-titolo {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .card-categoria {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 0.25rem;
+    }
+
+    /* Badge stato */
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .badge-live    { background: rgba(16,185,129,0.15); color: #10b981; }
+    .badge-wip     { background: rgba(245,158,11,0.15);  color: #f59e0b; }
+
+    /* Bottone apri */
+    .btn-apri {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--card-accent, var(--accent-1));
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      transition: opacity 0.2s;
+    }
+
+    .btn-apri:hover { opacity: 0.85; }
+
+    .btn-apri.disabilitato {
+      background: var(--border);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ===== ANIMAZIONE ENTRATA ===== */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card { animation: fadeUp 0.4s ease both; }
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.15s; }
+    .card:nth-child(3) { animation-delay: 0.25s; }
+    .card:nth-child(4) { animation-delay: 0.35s; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 480px) {
+      .griglia { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header>
+    <div class="avatar">👨‍💻</div>
+    <h1>Giovanni Dev</h1>
+    <p>App e PWA sviluppate da zero: giochi per la community, utility per il fantacalcio e molto altro.</p>
+  </header>
+
+  <!-- ===== FILTRI ===== -->
+  <div class="filtri">
+    <button class="filtro-btn attivo" data-filtro="tutti">Tutte</button>
+    <button class="filtro-btn" data-filtro="giochi">🎮 Giochi</button>
+    <button class="filtro-btn" data-filtro="fantacalcio">⚽ FantaCalcio</button>
+    <button class="filtro-btn" data-filtro="utility">🛠️ Utility</button>
+  </div>
+
+  <!-- ===== GRIGLIA APP ===== -->
+  <main>
+    <div class="griglia" id="griglia">
+
+      <!-- CARD 1 — FantaMorto -->
+      <article class="card" style="--card-accent: #8b5cf6;" data-categoria="giochi">
+        <div class="card-header">
+          <div class="card-icona">💀</div>
+          <div>
+            <div class="card-titolo">FantaMorto</div>
+            <div class="card-categoria">Giochi</div>
+          </div>
+        </div>
+        <p class="card-desc">
+          Il gioco delle morti celebri. Scegli i tuoi VIP, segui l'Indice di Rischio e scala la classifica nella tua lega privata.
+        </p>
+        <div class="card-footer">
+          <span class="badge badge-live">● Live</span>
+          <!-- Sostituisci # con l'URL reale di FantaMorto -->
+          <a href="#" class="btn-apri" target="_blank" rel="noopener">
+            Apri ↗
+          </a>
+        </div>
+      </article>
+
+      <!-- CARD 2 — Asta FantaCalcio -->
+      <article class="card" style="--card-accent: #10b981;" data-categoria="fantacalcio">
+        <div class="card-header">
+          <div class="card-icona">⚽</div>
+          <div>
+            <div class="card-titolo">Asta FantaCalcio</div>
+            <div class="card-categoria">FantaCalcio</div>
+          </div>
+        </div>
+        <p class="card-desc">
+          Gestisci la tua asta del fantacalcio in tempo reale. Crediti, rosa, timer e offerte sincronizzati tra tutti i partecipanti.
+        </p>
+        <div class="card-footer">
+          <span class="badge badge-wip">⚙ In sviluppo</span>
+          <a href="#" class="btn-apri disabilitato">
+            Presto ↗
+          </a>
+        </div>
+      </article>
+
+    </div><!-- /griglia -->
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <p>© <span id="anno"></span> Giovanni Dev — Tutti i diritti riservati</p>
+  </footer>
+
+  <script>
+    // ===== ANNO CORRENTE =====
+    document.getElementById('anno').textContent = new Date().getFullYear();
+
+    // ===== FILTRI CATEGORIA =====
+    const btnFiltri = document.querySelectorAll('.filtro-btn');
+    const cards     = document.querySelectorAll('.card[data-categoria]');
+
+    btnFiltri.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Aggiorna stile bottoni
+        btnFiltri.forEach(b => b.classList.remove('attivo'));
+        btn.classList.add('attivo');
+
+        const filtro = btn.dataset.filtro;
+
+        // Mostra/nasconde le card
+        cards.forEach(card => {
+          const visibile = filtro === 'tutti' || card.dataset.categoria === filtro;
+          card.style.display = visibile ? '' : 'none';
+        });
+      });
+    });
+
+    // ===== SERVICE WORKER =====
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(() => console.log('[SW] Registrato'))
+          .catch(err => console.warn('[SW] Errore:', err));
+      });
+    }
+  </script>
+</body>
+</html>
