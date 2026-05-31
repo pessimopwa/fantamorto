@@ -16,6 +16,7 @@
     --success:  #10b981;
     --gold:     #f59e0b;
     --radius:   12px;
+    --accent:   #a855f7;
 }
 
 /* ── RESET & BASE ─────────────────────────────────────────── */
@@ -405,10 +406,13 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
     border-radius: var(--radius); margin-bottom: 10px; overflow: hidden;
 }
 .classifica-riga--me { border-color: var(--accent); }
+.classifica-riga summary { list-style: none; }
+.classifica-riga summary::-webkit-details-marker { display: none; }
 .classifica-riga__header {
     display: flex; align-items: center; gap: 12px;
     padding: 14px 16px; cursor: pointer; user-select: none;
 }
+.classifica-riga[open] .classifica-riga__header { border-bottom: 1px solid var(--border); }
 .classifica-pos { font-size: 20px; min-width: 32px; text-align: center; }
 .classifica-info { flex: 1; min-width: 0; }
 .classifica-squadra { display: block; font-weight: 700; font-size: 14px;
@@ -416,9 +420,8 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .classifica-squadra em { font-style: normal; color: var(--accent); font-size: 12px; }
 .classifica-username { font-size: 12px; color: var(--muted); }
 .classifica-punteggio { font-weight: 700; color: #34d399; white-space: nowrap; font-size: 15px; }
-.classifica-toggle { font-size: 14px; color: var(--muted); padding-left: 4px; }
-.classifica-vip-lista { padding: 0 16px 12px; border-top: 1px solid var(--border); }
-.classifica-vip-vuoto { font-size: 13px; color: var(--muted); padding-top: 10px; }
+.classifica-vip-lista { padding: 8px 16px 12px; }
+.classifica-vip-vuoto { font-size: 13px; color: var(--muted); padding: 6px 0; }
 .classifica-vip-item {
     display: flex; justify-content: space-between; align-items: center;
     padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px;
