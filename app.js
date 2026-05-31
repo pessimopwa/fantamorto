@@ -811,9 +811,11 @@ async function rimuoviVip(squadraId, nomeVip) {
  * la lista dei VIP scelti con nome, età e stato (vivo/deceduto).
  */
 async function caricaClassifica() {
+    console.log('[CC-START] membroCorrente:', membroCorrente?.id, 'legaCorrente:', legaCorrente?.id);
     const container = document.getElementById('leaderboard');
-    if (!container) return;
+    if (!container) { console.log('[CC] no container'); return; }
     if (!membroCorrente || !legaCorrente) {
+        console.log('[CC] membro o lega null');
         container.innerHTML = '<div class="loading">Entra in una lega per vedere la classifica.</div>';
         return;
     }
